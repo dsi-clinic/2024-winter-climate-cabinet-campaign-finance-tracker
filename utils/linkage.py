@@ -1,14 +1,15 @@
-
-
 """
 Module for performing record linkage on state campaign finance dataset
 """
-import numpy as np
 # import pandas as pd
 import math
 
+import numpy as np
 
-def match_confidence(confidences: np.array(float), weights: np.array(float), weights_toggle: bool) -> float:
+
+def match_confidence(
+    confidences: np.array(float), weights: np.array(float), weights_toggle: bool
+) -> float:
     """Combine confidences for row matches into a final confidence
 
     This is a weighted log-odds based combination of row match confidences
@@ -33,7 +34,7 @@ def match_confidence(confidences: np.array(float), weights: np.array(float), wei
     log_odds = []
 
     for c in confidences:
-        l_o = np.log(c/(1-c))
+        l_o = np.log(c / (1 - c))
 
         if l_o > 5:
             l_o = 5
@@ -48,6 +49,6 @@ def match_confidence(confidences: np.array(float), weights: np.array(float), wei
 
     l_o_sum = np.sum(log_odds)
 
-    conf_sum = math.e**(l_o_sum)/(1+math.e**(l_o_sum))
+    conf_sum = math.e ** (l_o_sum) / (1 + math.e ** (l_o_sum))
 
     return conf_sum
