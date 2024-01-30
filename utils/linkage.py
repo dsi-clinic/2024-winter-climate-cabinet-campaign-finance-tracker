@@ -1,89 +1,53 @@
-import textdistance as td
-import usaddress
+
 
 """
 Module for performing record linkage on state campaign finance dataset
 """
+import numpy as np
+# import pandas as pd
+import math
 
 
-def calculate_string_similarity(string1: str, string2: str) -> float:
-    """Returns how similar two strings are on a scale of 0 to 1
+def match_confidence(confidences: np.array(float), weights: np.array(float), weights_toggle: bool) -> float:
+    """Combine confidences for row matches into a final confidence
 
-    This version utilizes Jaro-Winkler distance, which is a metric of
-    edit distance. Jaro-Winkler specially prioritizes the early
-    characters in a string.
+    This is a weighted log-odds based combination of row match confidences
+    originating from various record linkage methods. Weights will be applied
+    to the linkage methods in order and must be of the same length.
 
-    Since the ends of strings are often more valuable in matching names
-    and addresses, we reverse the strings before matching them.
+    weights_toggle allows one to turn weights on and off when calling the
+    function. False cancels the use of weights.
 
-    https://en.wikipedia.org/wiki/Jaro%E2%80%93Winkler_distance
-    https://github.com/Yomguithereal/talisman/blob/master/src/metrics/jaro-winkler.js
-
-    The exact meaning of the metric is open, but the following must hold true:
-    1. equivalent strings must return 1
-    2. strings with no similar characters must return 0
-    3. strings with higher intuitive similarity must return higher scores
-
-    Args:
-        string1: any string
-        string2: any string
-    Returns:
-        similarity score
-
-    Sample Usage:
-    >>> calculate_string_similarity("exact match", "exact match")
-    1.0
-    >>> calculate_string_similarity("aaaaaa", "bbbbbbbbbbb")
-    0.0
-    >>> similar_score = calculate_string_similarity("very similar", "vary similar")
-    >>> different_score = calculate_string_similarity("very similar", "very not close")
-    >>> similar_score > different_score
-    True
+    Since log-odds have undesirable behaviors at 0 and 1, we truncate at
+    +-5, which corresponds to around half a percent probability or
+    1 - the same.
+    >>> match_confidence(np.array([.6, .9, .0001]), np.array([2,5.7,8]), True)
+    2.627759082143462e-12
+    >>> match_confidence(np.array([.6, .9, .0001]), np.array([2,5.7,8]), False)
+    0.08337802853594725
     """
 
-    return float(td.jaro_winkler(string1.lower()[::-1], string2.lower()[::-1]))
+    if (min(confidences) < 0) or (max(confidences) > 1):
+        raise ValueError("Probabilities must be bounded on [0, 1]")
 
+    log_odds = []
 
-def get_street_from_address_line_1(address_line_1: str) -> str:
-    """Given an address line 1, return the street name
+    for c in confidences:
+        l_o = np.log(c/(1-c))
 
-    Args:
-        address_line_1: either street information or PO box
-    Returns:
-        street name
-    Raises:
-        ValueError: if string is malformed and no street can be reasonably
-            found.
+        if l_o > 5:
+            l_o = 5
 
-    >>> get_street_from_address_line_1("5645 N. UBER ST")
-    'UBER ST'
-    >>> get_street_from_address_line_1("")
-    Traceback (most recent call last):
-        ...
-    ValueError: address_line_1 must have whitespace
-    >>> get_street_from_address_line_1("PO Box 1111")
-    Traceback (most recent call last):
-        ...
-    ValueError: address_line_1 is PO Box
-    >>> get_street_from_address_line_1("300 59 St.")
-    '59 St.'
-    >>> get_street_from_address_line_1("Uber St.")
-    'Uber St.'
-    >>> get_street_from_address_line_1("3NW 59th St")
-    '59th St'
-    """
-    if not address_line_1 or address_line_1.isspace():
-        raise ValueError("address_line_1 must have whitespace")
+        elif l_o < -5:
+            l_o = -5
 
-    address_line_lower = address_line_1.lower()
+        log_odds.append(l_o)
 
-    if "po box" in address_line_lower:
-        raise ValueError("address_line_1 is PO Box")
+    if weights_toggle:
+        log_odds = log_odds * weights
 
-    string = []
-    address = usaddress.parse(address_line_1)
-    for key, val in address:
-        if val in ["StreetName", "StreetNamePostType"]:
-            string.append(key)
+    l_o_sum = np.sum(log_odds)
 
-    return " ".join(string)
+    conf_sum = math.e**(l_o_sum)/(1+math.e**(l_o_sum))
+
+    return conf_sum
