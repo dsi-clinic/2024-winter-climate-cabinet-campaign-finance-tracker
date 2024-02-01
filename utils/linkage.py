@@ -1,4 +1,5 @@
 import textdistance as td
+import pandas as pd
 import usaddress
 
 """
@@ -131,3 +132,29 @@ def get_street_from_address_line_1(address_line_1: str) -> str:
             string.append(key)
 
     return " ".join(string)
+
+
+def record_linkage_pipeline(df: pd.DataFrame, functions_list: list(str)) -> list(tuple(str, pd.DataFrame)):
+    """Run various record linkage functions and get their matches
+
+    This pipeline function starts from an original dataframe where each row
+    is an entity in our dataset, and uses various record linkage function
+    to find likely matches within it. Each linkage function works independently,
+    and none modify the original dataframe. Each function outputs the original
+    dataframe and a dataframe of row matches and confidences. The final output
+    is a list of tuples, where each tuple contains the name of the function
+    and the row match dataframe.
+
+    what about weights as an input? Presumably different functions would
+    specify different weights?
+
+    Does not currently have a test case
+    """
+
+    row_match_dfs = []
+
+    for fn in functions_list:
+        df, confidences = fn(df)
+        row_match_dfs.append(fn, confidences)
+
+    return row_match_dfs
