@@ -2,6 +2,8 @@ import textdistance as td
 import pandas as pd
 import usaddress
 
+from utils.constants import COMPANY_TYPES
+
 """
 Module for performing record linkage on state campaign finance dataset
 """
@@ -134,6 +136,7 @@ def get_street_from_address_line_1(address_line_1: str) -> str:
     return " ".join(string)
 
 
+
 def record_linkage_pipeline(df: pd.DataFrame, functions_list: list(str)) -> list(tuple(str, pd.DataFrame)):
     """Run various record linkage functions and get their matches
 
@@ -158,3 +161,37 @@ def record_linkage_pipeline(df: pd.DataFrame, functions_list: list(str)) -> list
         row_match_dfs.append(fn, confidences)
 
     return row_match_dfs
+  
+
+def standardize_corp_names(company_name: str) -> str:
+    """Given an employer name, return the standardized version
+
+    Args:
+        company_name: corporate name
+    Returns:
+        standardized company name
+
+    >>> standardize_corp_names('MI BEER WINE WHOLESALERS ASSOC')
+    'MI BEER WINE WHOLESALERS ASSOCIATION'
+
+    >>> standardize_corp_names('MI COMMUNITY COLLEGE ASSOCIATION')
+    'MI COMMUNITY COLLEGE ASSOCIATION'
+
+    >>> standardize_corp_names('STEPHANIES CHANGEMAKER FUND')
+    'STEPHANIES CHANGEMAKER FUND'
+
+    """
+
+    company_name_split = company_name.upper().split(" ")
+
+    for i in range(len(company_name_split)):
+        if company_name_split[i] in list(COMPANY_TYPES.keys()):
+            hold = company_name_split[i]
+            company_name_split[i] = COMPANY_TYPES[hold]
+
+    new_company_name = " ".join(company_name_split)
+    return new_company_name
+
+
+print(standardize_corp_names("MI BEER WINE WHOLESALERS ASSOC"))
+
