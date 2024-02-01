@@ -136,9 +136,7 @@ def get_street_from_address_line_1(address_line_1: str) -> str:
     return " ".join(string)
 
 
-def record_linkage_pipeline(
-    df: pd.DataFrame, functions_list: list(str)
-) -> list(tuple(str, pd.DataFrame)):
+def record_linkage_pipeline(df: pd.DataFrame, functions_list: list) -> list:
     """Run various record linkage functions and get their matches
 
     This pipeline function starts from an original dataframe where each row
