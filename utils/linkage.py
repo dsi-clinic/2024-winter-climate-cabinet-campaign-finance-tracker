@@ -2,7 +2,7 @@ import pandas as pd
 import textdistance as td
 import usaddress
 
-from utils.constants import COMPANY_TYPES
+from utils.constants import COMPANY_TYPES, repo_root
 
 """
 Module for performing record linkage on state campaign finance dataset
@@ -159,7 +159,7 @@ def record_linkage_pipeline(df: pd.DataFrame, functions_list: list) -> list:
         df, confidences = fn(df)
         row_match_dfs.append(fn, confidences)
 
-    return row_match_dfs
+    row_match_dfs.to_csv(repo_root / "output" / f"row_matches.csv")
 
 
 def standardize_corp_names(company_name: str) -> str:
