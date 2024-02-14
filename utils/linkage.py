@@ -1,4 +1,5 @@
 import pandas as pd
+import re
 import textdistance as td
 import usaddress
 
@@ -136,6 +137,7 @@ def get_street_from_address_line_1(address_line_1: str) -> str:
     return " ".join(string)
 
 
+
 def record_linkage_pipeline(df: pd.DataFrame, functions_list: list) -> list:
     """Run various record linkage functions and get their matches
 
@@ -160,6 +162,64 @@ def record_linkage_pipeline(df: pd.DataFrame, functions_list: list) -> list:
         row_match_dfs.append(fn, confidences)
 
     row_match_dfs.to_csv(repo_root / "output" / f"row_matches.csv")
+
+
+def cleaning_company_column(company_entry: str) -> str:
+    """
+    Given a string, check if it contains a variation of self employed, unemployed,
+    or retired and return the standardized version.
+
+    Args:
+        company: string of inputted company names
+    Returns:
+        standardized for retired, self employed, and unemployed,
+        or original string if no match or empty string
+
+    >>> cleaning_company_column("Retireed")
+    'Retired'
+    >>> cleaning_company_column("self")
+    'Self Employed'
+    >>> cleaning_company_column("None")
+    'Unemployed'
+    >>> cleaning_company_column("N/A")
+    'Unemployed'
+    """
+
+    if not company_entry:
+        return company_entry
+
+    company_edited = company_entry.lower()
+
+    if company_edited == "n/a":
+        return "Unemployed"
+
+    company_edited = re.sub(r"[^\w\s]", "", company_edited)
+
+    if (
+        company_edited == "retired"
+        or company_edited == "retiree"
+        or company_edited == "retire"
+        or "retiree" in company_edited
+    ):
+        return "Retired"
+
+    elif (
+        "self employe" in company_edited
+        or "freelance" in company_edited
+        or company_edited == "self"
+        or company_edited == "independent contractor"
+    ):
+        return "Self Employed"
+    elif (
+        "unemploye" in company_edited
+        or company_edited == "none"
+        or company_edited == "not employed"
+        or company_edited == "nan"
+    ):
+        return "Unemployed"
+
+    else:
+        return company_edited
 
 
 def standardize_corp_names(company_name: str) -> str:
@@ -192,4 +252,32 @@ def standardize_corp_names(company_name: str) -> str:
     return new_company_name
 
 
-print(standardize_corp_names("MI BEER WINE WHOLESALERS ASSOC"))
+def get_address_number_from_address_line_1(address_line_1: str) -> str:
+    """Given an address line 1, return the building number or po box
+
+    Args:
+        address_line_1: either street information or PO box
+    Returns:
+        address or po box number
+
+    Sample Usage:
+    >>> get_address_number_from_address_line_1('6727 W. Corrine Dr.  Peoria,AZ 85381')
+    '6727'
+    >>> get_address_number_from_address_line_1('P.O. Box 5456  Sun City West ,AZ 85375')
+    '5456'
+    >>> get_address_number_from_address_line_1('119 S 5th St  Niles,MI 49120')
+    '119'
+    >>> get_address_number_from_address_line_1(
+    ...     '1415 PARKER STREET APT 251	DETROIT	MI	48214-0000'
+    ... )
+    '1415'
+    """
+
+    address_line_1_components = usaddress.parse(address_line_1)
+
+    for i in range(len(address_line_1_components)):
+        if address_line_1_components[i][1] == "AddressNumber":
+            return address_line_1_components[i][0]
+        elif address_line_1_components[i][1] == "USPSBoxID":
+            return address_line_1_components[i][0]
+    raise ValueError("Can not find Address Number")
