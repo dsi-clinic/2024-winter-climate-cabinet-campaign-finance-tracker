@@ -5,10 +5,11 @@ import os.path
 import re
 
 import pandas as pd
+import requests
 import textdistance as td
 import usaddress
 
-from utils.constants import COMPANY_TYPES, repo_root
+from utils.constants import API_IDS, COMPANY_TYPES, repo_root
 
 
 def get_address_line_1_from_full_address(address: str) -> str:
@@ -459,3 +460,53 @@ def get_address_number_from_address_line_1(address_line_1: str) -> str:
         elif address_line_1_components[i][1] == "USPSBoxID":
             return address_line_1_components[i][0]
     raise ValueError("Can not find Address Number")
+
+
+def fetch_data() -> pd.DataFrame:
+    """
+    Fetches data from the API and returns the data in a DataFrame
+    API from https://littlesis.org/api
+
+    Args:
+        None
+    Returns:
+        Pandas DataFrame of individuals and their role in the company
+    """
+    initial_dict = {}
+    for name, id in API_IDS.items():
+        url = f"https://littlesis.org/api/entities/{id}/relationships"
+        response = requests.get(url)
+        if response.status_code != 200:
+            print(f"First unsuccessful attempt to retrieve data for {name}")
+            response = requests.get(url)
+            if response.status_code == 503:
+                print("Second unsuccessful attempt.")
+                print(f"Rate limit exceeded for {name}")
+                continue
+
+        data = response.json()
+        description_list = []
+        for item in data["data"]:
+            description = item["attributes"]["description"]
+            description_list.append(description)
+
+        initial_dict[name] = description_list
+        print(f"Succesfully got data for {name}")
+
+    values_list = list(initial_dict.values())
+    leadership = []
+    for i in values_list:
+        for j in i:
+            if "Board Member" in j:
+                leadership.append(j)
+            if "a position" in j:
+                leadership.append(j)
+
+    df = pd.DataFrame(leadership, columns=["Leadership"])
+
+    df["Name"] = df["Leadership"].str.extract(r"(.*)\s+(?:has/had|has|had)")
+    df["Position"] = df["Leadership"].str.findall(r"\(.*\)").str[0]
+    df["Position"] = df["Position"].str.replace("(", "").str.replace(")", "")
+    df["Company"] = df["Leadership"].str.partition(" at ")[2]
+    df = df.drop("Leadership", axis=1)
+    return df
