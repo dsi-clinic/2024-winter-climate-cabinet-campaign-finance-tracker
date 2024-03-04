@@ -16,23 +16,35 @@ def network_metrics(net_graph: nx.Graph) -> None:
         eigenvector, and betweenness
 
     """
-    in_degree = nx.in_degree_centrality(net_graph)
-    out_degree = nx.out_degree_centrality(net_graph)
-    eigenvector = nx.eigenvector_centrality_numpy(net_graph, weight="amount")
-    betweenness = nx.betweenness_centrality(net_graph, weight="amount")
+    in_degree = nx.in_degree_centrality(
+        net_graph
+    )  # calculates in degree centrality of nodes
+    out_degree = nx.out_degree_centrality(
+        net_graph
+    )  # calculated out degree centrality of nodes
+    eigenvector = nx.eigenvector_centrality_numpy(
+        net_graph, weight="amount"
+    )  # calculates eigenvector centrality of nodes
+    betweenness = nx.betweenness_centrality(
+        net_graph, weight="amount"
+    )  # calculates betweenness centrality of nodes
 
     assortativity = nx.attribute_assortativity_coefficient(
         net_graph, "classification"
-    )
+    )  # calculates assortativity of graph
 
     num_nodes = len(net_graph.nodes())
     num_edges = len(net_graph.edges())
-    density = num_edges / (num_nodes * (num_nodes - 1))
+    density = num_edges / (
+        num_nodes * (num_nodes - 1)
+    )  # calculates density of graph
 
-    k = 4
+    k = 5
     comp = nx.community.girvan_newman(net_graph)
     for communities in itertools.islice(comp, k):
-        communities = tuple(sorted(c) for c in communities)
+        communities = tuple(
+            sorted(c) for c in communities
+        )  # creates clusters of nodes with high interactions where granularity = 5
 
     with open("network_metrics.txt", "w") as file:
         file.write(f"in degree centrality: {in_degree}\n")
