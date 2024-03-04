@@ -1,3 +1,5 @@
+import itertools
+
 import networkx as nx
 
 
@@ -19,8 +21,27 @@ def network_metrics(net_graph: nx.Graph) -> None:
     eigenvector = nx.eigenvector_centrality_numpy(net_graph, weight="amount")
     betweenness = nx.betweenness_centrality(net_graph, weight="amount")
 
+    assortativity = nx.attribute_assortativity_coefficient(
+        net_graph, "classification"
+    )
+
+    num_nodes = len(net_graph.nodes())
+    num_edges = len(net_graph.edges())
+    density = num_edges / (num_nodes * (num_nodes - 1))
+
+    k = 4
+    comp = nx.community.girvan_newman(net_graph)
+    for communities in itertools.islice(comp, k):
+        communities = tuple(sorted(c) for c in communities)
+
     with open("network_metrics.txt", "w") as file:
         file.write(f"in degree centrality: {in_degree}\n")
         file.write(f"out degree centrality: {out_degree}\n")
         file.write(f"eigenvector centrality: {eigenvector}\n")
-        file.write(f"betweenness centrality: {betweenness}")
+        file.write(f"betweenness centrality: {betweenness}\n\n")
+
+        file.write(f"assortativity based on 'classification': {assortativity}")
+
+        file.write(f"density': {density}")
+
+        file.write(f"communities': {communities}")
