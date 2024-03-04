@@ -29,6 +29,18 @@ def network_metrics(net_graph: nx.Graph) -> None:
         net_graph, weight="amount"
     )  # calculates betweenness centrality of nodes
 
+    # sort + truncate dictionaries to 50 nodes with greatest centrality
+    in_degree = sorted(in_degree.items(), key=lambda x: x[1], reverse=True)[:50]
+    out_degree = sorted(in_degree.items(), key=lambda x: x[1], reverse=True)[
+        :50
+    ]
+    eigenvector = sorted(eigenvector.items(), key=lambda x: x[1], reverse=True)[
+        :50
+    ]
+    betweenness = sorted(betweenness.items(), key=lambda x: x[1], reverse=True)[
+        :50
+    ]
+
     assortativity = nx.attribute_assortativity_coefficient(
         net_graph, "classification"
     )  # calculates assortativity of graph
