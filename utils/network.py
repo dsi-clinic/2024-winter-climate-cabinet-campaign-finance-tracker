@@ -73,7 +73,7 @@ def network_metrics(net_graph: nx.Graph) -> None:
 
         file.write(f"density': {density}\n\n")
 
-        file.write(f"communities': {communities}\n\n")
+        file.write(f"communities where k = 5': {communities}\n\n")
 
 
 def name_identifier(uuid: str, dfs: list[pd.DataFrame]) -> str:
