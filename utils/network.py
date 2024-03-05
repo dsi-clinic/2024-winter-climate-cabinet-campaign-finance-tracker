@@ -61,7 +61,7 @@ def network_metrics(net_graph: nx.Graph) -> None:
         )  # creates clusters of nodes with high interactions where granularity = 5
     communities = sorted(communities, key=len, reverse=True)
 
-    with open("network_metrics.txt", "w") as file:
+    with open("output/network_metrics.txt", "w") as file:
         file.write(f"in degree centrality: {in_degree}\n")
         file.write(f"out degree centrality: {out_degree}\n")
         file.write(f"eigenvector centrality: {eigenvector}\n")
