@@ -1,12 +1,28 @@
 import os
-import sys  # noqa
+import os.path
+import sys
 
 import pandas as pd
-from constants import c_org_names, f_companies, f_org_names
 
-script_dir = os.path.dirname(os.path.abspath(__file__))  # noqa
-project_dir = os.path.dirname(script_dir)  # noqa
-sys.path.append(project_dir)  # noqa
+# from constants import c_org_names, f_companies, f_org_names
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Navigate up to the project directory
+project_dir = os.path.dirname(script_dir)
+
+sys.path.append(project_dir)
+
+
+# import os
+# import sys  # noqa
+
+# import pandas as pd
+# from utils.constants import c_org_names, f_companies, f_org_names
+
+# script_dir = os.path.dirname(os.path.abspath(__file__))  # noqa
+# project_dir = os.path.dirname(script_dir)  # noqa
+# sys.path.append(project_dir)  # noqa
 
 
 def classify_wrapper(
@@ -82,6 +98,18 @@ def classify_individuals(individuals_df: pd.DataFrame):
         an individuals dataframe updated with the fossil fuels category
     """
 
+    f_companies = [
+        "exxon",
+        "chevron",
+        "southwest gas",
+        "petroleum",
+        "koch industries",
+        "koch companies",
+        "oil & gas",
+        "marathon oil",
+        "shell oil",
+    ]
+
     for i in f_companies:
         individuals_df = matcher(individuals_df, i, "company", "f")
 
@@ -103,6 +131,28 @@ def classify_orgs(organizations_df: pd.DataFrame):
         an organizations dataframe updated with the fossil fuels
         and clean energy category
     """
+
+    # organizations f names
+    f_org_names = [
+        "koch industries",
+        "koch pac",
+        "kochpac",
+        "southwest gas az",
+        "pinnacle west",
+        "americans for prosperity",
+        "energy transfer",
+    ]
+
+    # organizations c names
+    c_org_names = [
+        "clean energy",
+        "vote solar action",
+        "renewable",
+        "pattern energy",
+        "beyond carbon",
+        "lcv victory",
+        "league of conservation",
+    ]
 
     for i in f_org_names:
         organizations_df = matcher(organizations_df, i, "name", "f")
