@@ -1,13 +1,23 @@
 import math
+import os
 import os.path
 import re
+import sys
 
 import numpy as np
 import pandas as pd
 import textdistance as td
 import usaddress
-from constants import COMPANY_TYPES, repo_root, suffixes, titles
 from splink.duckdb.linker import DuckDBLinker
+
+from utils.constants import COMPANY_TYPES, repo_root, suffixes, titles
+
+script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Navigate up to the project directory
+project_dir = os.path.dirname(script_dir)
+
+sys.path.append(project_dir)
 
 """
 Module for performing record linkage on state campaign finance dataset

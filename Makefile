@@ -31,7 +31,8 @@ run-notebooks:
 
 
 #running the linkage pipeline and creating the network graph
-#still waiting on linkage_pipeline completion to get this into final shape
+
+PYTHONPATH := $(PWD)
 
 output run-linkage-pipeline:
 	python utils/linkage_pipeline.py

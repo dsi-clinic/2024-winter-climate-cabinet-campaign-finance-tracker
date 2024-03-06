@@ -1,5 +1,12 @@
+import os
+import sys  # noqa
+
 import pandas as pd
 from constants import c_org_names, f_companies, f_org_names
+
+script_dir = os.path.dirname(os.path.abspath(__file__))  # noqa
+project_dir = os.path.dirname(script_dir)  # noqa
+sys.path.append(project_dir)  # noqa
 
 
 def classify_wrapper(

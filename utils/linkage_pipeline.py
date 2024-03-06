@@ -14,6 +14,13 @@ from linkage import (
 from nameparser import HumanName
 from network import combine_datasets_for_network_graph, create_network_graph
 
+# import os
+# import sys
+# script_dir = os.path.dirname(os.path.abspath(__file__))
+# # Navigate up to the project directory
+# project_dir = os.path.dirname(script_dir)
+# sys.path.append(project_dir)
+
 
 def preprocess_individuals(individuals: pd.DataFrame) -> pd.DataFrame:
     """
